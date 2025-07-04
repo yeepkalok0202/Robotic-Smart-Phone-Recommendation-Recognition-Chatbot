@@ -1,0 +1,4 @@
+<launch>
+    <!-- Stop Detection Pipeline -->
+    <node name="stop_detection" pkg="robot_project_pkg" type="stop_detection.py" output="screen"/>
+</launch>

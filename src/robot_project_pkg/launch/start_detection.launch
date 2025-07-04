@@ -1,0 +1,14 @@
+<launch>
+    <!-- Launch USB Camera Node -->
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen">
+        <param name="video_device" value="/dev/video2"/>
+        <param name="image_width" value="640"/>
+        <param name="image_height" value="480"/>
+        <param name="pixel_format" value="yuyv"/>
+        <param name="frame_id" value="camera"/>
+    </node>
+
+    <!-- Start Detection Pipeline -->
+    <node name="start_detection" pkg="robot_project_pkg" type="start_detection.py" output="screen"/>
+    <node name="detection_node" pkg="robot_project_pkg" type="detection.py" output="screen"/>
+</launch>

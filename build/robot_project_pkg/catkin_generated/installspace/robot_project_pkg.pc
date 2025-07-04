@@ -1,0 +1,8 @@
+prefix=/home/mustar/robot_project/install
+
+Name: robot_project_pkg
+Description: Description of robot_project_pkg
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

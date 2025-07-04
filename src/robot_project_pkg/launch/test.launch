@@ -1,0 +1,3 @@
+<launch>
+    <node name = "detection" pkg = "robot_project_pkg" type = "test_detection.py"/>
+</launch>

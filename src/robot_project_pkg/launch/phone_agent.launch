@@ -1,0 +1,4 @@
+<launch>
+    <!-- Start Speech-to-Text Node -->
+    <node name="stt_node" pkg="robot_project_pkg" type="stt_node.py" output="screen"/> 
+</launch>

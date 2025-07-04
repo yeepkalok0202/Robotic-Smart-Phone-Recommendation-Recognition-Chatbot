@@ -1,0 +1,2 @@
+robot_project_pkg
+-DCATKIN_DEVEL_PREFIX=/home/mustar/robot_project/devel -DCMAKE_INSTALL_PREFIX=/home/mustar/robot_project/install -G Unix Makefiles
