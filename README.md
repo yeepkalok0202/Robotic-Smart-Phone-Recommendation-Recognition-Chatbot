@@ -1,4 +1,4 @@
-# 🤖 Jupiter Robot – Phone Detection Assistant
+# 🤖 Jupiter Robot – Smart Phone Recognition and Recommendation Assistant
 
 This ROS project combines speech-to-text (STT) with RAG implementation, wake-word activation, and camera-based phone detection into a single intelligent agent.
 
