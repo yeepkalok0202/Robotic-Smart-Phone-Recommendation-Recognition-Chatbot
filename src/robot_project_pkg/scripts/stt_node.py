@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import roslaunch
 import rospy
 import os
 import subprocess
@@ -9,7 +10,7 @@ from std_msgs.msg import String
 import speech_recognition as sr
 from gtts import gTTS
 import time
-
+import rospkg
 # Initialize the recognizer and the microphone
 recognizer = sr.Recognizer()
 mic = sr.Microphone()
@@ -24,7 +25,7 @@ latest_detection_data = None
 # announced_phones = set() 
 last_recognized_phone = None
 announcement_made = False
-
+detection_process = None
 API_URL = "https://jgftptvusufhzbk3eenu2el3ja0igvvg.lambda-url.ap-southeast-1.on.aws/ask"
 
 # Function to speak the text using Google TTS
@@ -71,31 +72,51 @@ def query_api(command_text):
 
 # Start detection nodes
 def start_detection_nodes():
+    global detection_process
+    if detection_process is not None:
+        rospy.loginfo("Detection is already running.")
+        return
+
     try:
         rospy.loginfo("🚀 Starting usb_cam and detection nodes...")
-        subprocess.Popen(["roslaunch", "robot_project_pkg", "start_detection.launch"])
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        
+        # Correct way to find the package path
+        rospack_obj = rospkg.RosPack()
+        pkg_path = rospack_obj.get_path("robot_project_pkg")
+        
+        launch_file = os.path.join(pkg_path, 'launch', 'detection_pipeline.launch')
+        
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [launch_file])
+        launch.start()
+        
+        detection_process = launch
+        rospy.loginfo("Detection nodes started successfully.")
+
+    except rospkg.ResourceNotFound:
+        rospy.logerr("Error: 'robot_project_pkg' not found. Have you sourced your workspace?")
     except Exception as e:
         rospy.logerr(f"Error starting detection nodes: {e}")
-
+        detection_process = None
+        
 # Stop detection nodes by calling external stop_detection.py
 def stop_detection_nodes():
+    global detection_process
+    if detection_process is None:
+        rospy.loginfo("Detection is not running.")
+        return
+
     try:
-        rospy.loginfo("Running stop_detection.py to stop camera and detection nodes...")
-        subprocess.Popen(["roslaunch", "robot_project_pkg", "stop_detection.launch"])
+        rospy.loginfo("🛑 Stopping camera and detection nodes...")
+        detection_process.shutdown()
+        detection_process = None
+        rospy.loginfo("Detection nodes stopped successfully.")
     except Exception as e:
-        rospy.logerr(f"Failed to run stop_detection.py: {e}")
+        rospy.logerr(f"Failed to stop detection nodes cleanly: {e}")
+
 
 # Callback to capture latest detection
-# def detection_callback(msg):
-#     global latest_detection_data
-#     try:
-#         data = json.loads(msg.data)
-#         if data:
-#             detected_items = [d['class_name'] for d in data]
-#             latest_detection_data = ', '.join(set(detected_items))
-#     except Exception as e:
-#         rospy.logerr(f"Error parsing detection data: {e}")
-
 def detection_callback(msg):
     global is_speaking, last_announced, last_recognized_phone, announcement_made
 
@@ -150,74 +171,6 @@ def detection_callback(msg):
         is_speaking = False
 
 # Main function
-# def main():
-#     global is_speaking
-#     rospy.init_node('speech_to_text_node', anonymous=True)
-#     rospy.Subscriber("/phone_detections", String, detection_callback)
-#     rate = rospy.Rate(0.5)
-
-#     rospy.loginfo("Voice assistant node started. Listening for wake word 'Hey Alex'...")
-
-#     while not rospy.is_shutdown():
-#         # Do not let the listen function block if the system is already busy.
-#         # This prevents it from hearing "Hey Alex" while another process is about to speak.
-#         if is_speaking:
-#             rate.sleep() # Wait a moment before checking again
-#             continue
-
-
-#         wake = listen_and_recognize("Listening for wake word 'Hey Alex'...")
-#         if wake and "hey alex" in wake:
-#             # Immediately acquire the lock after hearing the wake word.
-#             if is_speaking:
-#                 rospy.logwarn("Wake word detected, but system is already speaking. Ignoring.")
-#                 continue
-            
-#             # 1. ACQUIRE LOCK
-#             is_speaking = True
-#             try:
-#                 rospy.loginfo("Wake word detected.")
-#                 speak("Hi! How can I help you? I'm here to help you with phone recommendation or even phone model recognition. " \
-#                 "For phone recommendation, just tell me your requirement and I will advice you. For phone model recognition, I will start scanning" \
-#                 "after you trigger me with words \"start detection\", to stop it, end it with words \"stop detection\"," \
-#                 "after your first phone model recognition, trigger me with \"new detections\" ", 'en')
-#                 command = listen_and_recognize("Listening for command...")
-#                 if command:
-#                     if "start detection" in command:
-#                         start_detection_nodes()
-#                         speak("Starting detection...", 'en')
-#                     elif "stop detection" in command:
-#                         stop_detection_nodes()
-#                         speak("Stopping detection...", 'en')
-#                 # NEW: Add a command to reset the announced phones
-#                     elif "new detections" in command or "forget phones" in command:
-#                         global last_announced, last_recognized_phone, announcement_made
-#                         last_announced.clear()
-#                         last_recognized_phone = None
-#                         announcement_made = False # Reset the announcement lock
-#                         speak("Okay, I'm ready to identify the next phone you show me.", 'en')
-#                     else: # This block handles all other verbal questions
-#                         speak("Acknowledge! Please give me a moment.", 'en')
-#                         prompt = ""
-#                         # If we have context, provide it to the RAG API
-#                         if last_recognized_phone:
-#                             rospy.loginfo(f"Sending command with context. Last phone: {last_recognized_phone}. Command: {command}")
-#                             # This new prompt asks the RAG API to figure out if the question is a follow-up
-#                             prompt = (f"The user's last point of interest was the '{last_recognized_phone}'. "
-#                                     f"They have now asked: '{command}'. "
-#                                     f"If this new question is a follow-up about the phone, answer it in that context. "
-#                                     f"If it is a new, unrelated question, ignore the previous phone and answer the question directly.")
-#                         else: # If there is no context, just send the command
-#                             rospy.loginfo(f"New question: {command}")
-#                             prompt = command
-                        
-#                         response = query_api(prompt)
-#                         speak(response, 'en')
-#             finally:
-#                 # 2. RELEASE LOCK
-#                 is_speaking = False
-
-#         rate.sleep()
 
 def main():
     global is_speaking, last_announced, last_recognized_phone, announcement_made
@@ -244,10 +197,11 @@ def main():
             
             # Give a short, one-time greeting
             is_speaking = True
-            speak("Hi! How can I help you? I'm here to help you with phone recommendation or even phone model recognition. " \
-                    "For phone recommendation, just tell me your requirement and I will advice you. For phone model recognition, I will start scanning" \
-                    "after you trigger me with words \"start detection\", to stop it, end it with words \"stop detection\"," \
-                    "after your first phone model recognition, trigger me with \"next detection\" ", 'en')
+            # speak("Hi! How can I help you? I'm here to help you with phone recommendation or even phone model recognition. " \
+            #         "For phone recommendation, just tell me your requirement and I will advice you. For phone model recognition, I will start scanning" \
+            #         "after you trigger me with words \"start detection\", to stop it, end it with words \"stop detection\"," \
+            #         "after your first phone model recognition, trigger me with \"next detection\" ", 'en')
+            speak("Fuck u",'en')
             is_speaking = False
 
             while not rospy.is_shutdown():
