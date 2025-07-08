@@ -95,7 +95,7 @@ def main():
     time.sleep(runtime_seconds)
 
     # Cleanup all processes
-    print("\n🧹 Cleaning up...\n")
+    print("\nCleaning up...\n")
     stop_terminal("phone_agent")
     stop_terminal("detection_echo")
     stop_terminal("rqt_image")

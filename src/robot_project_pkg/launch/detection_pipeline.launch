@@ -7,7 +7,7 @@
         <param name="frame_id" value="camera"/>
     </node>
 
-    <node name="detection_node" pkg="robot_project_pkg" type="detection.py" output="screen"/>
+    <node name="phone_detector_node" pkg="robot_project_pkg" type="detection.py" output="screen"/>
 
     <node name="rqt_image_view" pkg="rqt_image_view" type="rqt_image_view"
           args="/phone_detections/image_annotated"

@@ -78,7 +78,7 @@ def start_detection_nodes():
         return
 
     try:
-        rospy.loginfo("🚀 Starting usb_cam and detection nodes...")
+        rospy.loginfo("Starting usb_cam and detection nodes...")
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
         
@@ -108,7 +108,7 @@ def stop_detection_nodes():
         return
 
     try:
-        rospy.loginfo("🛑 Stopping camera and detection nodes...")
+        rospy.loginfo("Stopping camera and detection nodes...")
         detection_process.shutdown()
         detection_process = None
         rospy.loginfo("Detection nodes stopped successfully.")
@@ -176,6 +176,7 @@ def main():
     global is_speaking, last_announced, last_recognized_phone, announcement_made
     
     rospy.init_node('speech_to_text_node', anonymous=True)
+    phone_rec_pub = rospy.Publisher("/phone_recommendation", String, queue_size=10)
     rospy.Subscriber("/phone_detections", String, detection_callback)
     rate = rospy.Rate(0.5) # Increased rate for better responsiveness
 
@@ -190,6 +191,7 @@ def main():
             continue
 
         wake = listen_and_recognize("Listening for wake word 'Hey Alex'...")
+
         if wake and "alex" in wake:
             
             # --- SESSION STARTED ---
@@ -197,11 +199,11 @@ def main():
             
             # Give a short, one-time greeting
             is_speaking = True
-            # speak("Hi! How can I help you? I'm here to help you with phone recommendation or even phone model recognition. " \
-            #         "For phone recommendation, just tell me your requirement and I will advice you. For phone model recognition, I will start scanning" \
-            #         "after you trigger me with words \"start detection\", to stop it, end it with words \"stop detection\"," \
-            #         "after your first phone model recognition, trigger me with \"next detection\" ", 'en')
-            speak("Fuck u",'en')
+            speak("Hi! How can I help you? I'm here to help you with phone recommendation or even phone model recognition. " \
+                    "For phone recommendation, just tell me your requirement and I will advice you. For phone model recognition, I will start scanning" \
+                    "after you trigger me with words \"start detection\", to stop it, end it with words \"stop detection\"," \
+                    "after your first phone model recognition, trigger me with \"next detection\" ", 'en')
+           
             is_speaking = False
 
             while not rospy.is_shutdown():
@@ -212,6 +214,7 @@ def main():
                     continue
 
                 command = listen_and_recognize("Listening for command...")
+
                 if command:
                     # First, check for the command to end the session
                     if "bye alex" in command:
@@ -239,18 +242,24 @@ def main():
                             speak("Okay, I'm ready to identify the next new phone you show me.", 'en')
                         
                         else: # Handle all other verbal questions
-                            prompt = ""
-                            if last_recognized_phone:
-                                prompt = (f"The user's last point of interest was the '{last_recognized_phone}'. "
-                                          f"They have now asked: '{command}'. "
-                                          f"If this new question is a follow-up about the phone, answer it in that context. "
-                                          f"If it is a new, unrelated question, ignore the previous phone and answer the question directly.")
+                            phone_rec_msg = String()
+                            if last_recognized_phone is None:
+                                phone_rec_msg.data = "&&&" + command
                             else:
-                                prompt = command
+                                phone_rec_msg.data = last_recognized_phone + "&&&" + command
+                            phone_rec_pub.publish(phone_rec_msg)
+                            #prompt = ""
+                            #if last_recognized_phone:
+                            #    prompt = (f"The user's last point of interest was the '{last_recognized_phone}'. "
+                            #              f"They have now asked: '{command}'. "
+                            #              f"If this new question is a follow-up about the phone, answer it in that context. "
+                            #              f"If it is a new, unrelated question, ignore the previous phone and answer the question directly.")
+                            #else:
+                            #    prompt = command
                             
-                            speak("Okay, give me a moment to look that up.", 'en')
-                            response = query_api(prompt)
-                            speak(response, 'en')
+                            #speak("Okay, give me a moment to look that up.", 'en')
+                            #response = query_api(prompt)
+                            #speak(response, 'en')
                     finally:
                         is_speaking = False # Release the lock after the command is done
             

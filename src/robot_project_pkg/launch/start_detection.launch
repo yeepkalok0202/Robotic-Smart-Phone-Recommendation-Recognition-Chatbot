@@ -10,5 +10,5 @@
 
     <!-- Start Detection Pipeline -->
     <node name="start_detection" pkg="robot_project_pkg" type="start_detection.py" output="screen"/>
-    <node name="detection_node" pkg="robot_project_pkg" type="detection.py" output="screen"/>
+    <node name="phone_detector_node" pkg="robot_project_pkg" type="detection.py" output="screen"/>
 </launch>

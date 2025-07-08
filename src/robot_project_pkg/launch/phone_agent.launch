@@ -1,4 +1,5 @@
 <launch>
     <!-- Start Speech-to-Text Node -->
     <node name="stt_node" pkg="robot_project_pkg" type="stt_node.py" output="screen"/> 
+    <node name="phone_recommendation_node" pkg="robot_project_pkg" type="recommendation.py" output="screen" />
 </launch>

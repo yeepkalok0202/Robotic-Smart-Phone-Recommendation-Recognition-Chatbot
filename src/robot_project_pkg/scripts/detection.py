@@ -4,8 +4,6 @@ import rospy
 import cv2
 from ultralytics import YOLO
 import json
-import os
-import pickle
 from classification import predict, load_model
 from PIL import Image as PILImage
 # ROS Message Imports
@@ -22,7 +20,7 @@ class PhoneDetector:
         # --- Class Members ---
         self.bridge = CvBridge()
         self.model = YOLO('yolov8n.pt')  # Load the YOLOv8 model
-        self.classifier = load_model(f"{WORD_DIR}/model/best_model_v2.pt") 
+        self.classifier = load_model(f"{WORD_DIR}/model/best_model_v2.pt") # Load the classifier model
 
         # ROS topic names
         image_topic = "/usb_cam/image_raw"
@@ -30,7 +28,7 @@ class PhoneDetector:
         self.annotated_image_pub = rospy.Publisher("/phone_detections/image_annotated", Image, queue_size=10)
         self.image_sub = rospy.Subscriber(image_topic, Image, self.image_callback)
 
-        rospy.loginfo("📷 Phone Detector node started. Listening on: %s", image_topic)
+        rospy.loginfo("Phone Detector node started. Listening on: %s", image_topic)
 
    
     def image_callback(self, msg):

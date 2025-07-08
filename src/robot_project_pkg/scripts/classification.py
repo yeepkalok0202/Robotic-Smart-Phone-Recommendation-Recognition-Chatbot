@@ -38,8 +38,3 @@ def predict(image, model):
         outputs = model(img_tensor)
         _, predicted_index = torch.max(outputs, 1)
     return CLASS_NAMES[predicted_index.item()]
-
-# if __name__ == "__main__":
-#     img = Image.open("/home/mustar/robot_project/src/robot_project_pkg/data/test/oppo_find_x6pro.jpg").convert("RGB")
-#     result = predict(img)
-#     print("Predicted class:", result)
