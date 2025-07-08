@@ -71,7 +71,7 @@ rm -rf build/ devel/
 catkin_make
 ```
 
-**3. Set up the python environment**
+**3. Set up the Python environment**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -84,7 +84,7 @@ deactivate
 source devel/setup.bash
 ```
 
-## ⚙️ Running the Complete Agent ##
+## ⚙️ Running the Complete Agent 
 
 ```bash
 roslaunch robot_project_pkg phone_agent.launch
@@ -98,8 +98,8 @@ roslaunch robot_project_pkg phone_agent.launch
    - "Start detection"
    - "Stop detection"
    - "Next detection"
-   - "Recommend a Oppo phone with budget 3000 ringgit."
-   - "Recommend a Oppo with good battery life."
+   - "Recommend an Oppo phone with budget 3000 ringgit."
+   - "Recommend an Oppo phone with good battery life."
 
 3. For phone recognition:
    - Display the phone image in front of the camera.
@@ -108,4 +108,3 @@ roslaunch robot_project_pkg phone_agent.launch
 4. For phone recommendation:
    - Verbally describe your requirements (e.g., budget, battery).
    - The assistant will respond with a suitable phone recommendation based on the criteria.
-
